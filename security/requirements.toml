@@ -1,0 +1,6 @@
+# Root-owned and mounted read-only. Agent edits cannot grant unrestricted execution.
+allowed_approval_policies = ["on-request"]
+# Guardian remains the default. Background catalog reads and explicit human approval
+# flows may require the user reviewer; both retain an interactive approval boundary.
+allowed_approvals_reviewers = ["auto_review", "user"]
+allowed_sandbox_modes = ["read-only", "workspace-write"]

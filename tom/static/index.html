@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tom · Your assistants at home</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<aside><a class="brand" href="/">tom<span class="brand-dot"></span></a>
+<p class="eyebrow">YOUR ASSISTANTS, AT HOME</p>
+<div id="identity" class="identity">Connecting…</div>
+<div class="section-label">Assistants <button id="new-assistant" hidden aria-label="Create assistant">+</button></div>
+<nav id="instances" aria-label="Assistants"></nav>
+<div class="sidebar-bottom"><span class="status-dot"></span> Private access<br><small id="capacity">One active browser at a time</small></div>
+</aside>
+<main>
+<header><div><p class="eyebrow">A LITTLE SPACE TO GET THINGS DONE</p><h1 id="title">Welcome home.</h1></div>
+<span id="state" class="pill">Ready when you are</span></header>
+<div id="notice" role="status" hidden></div>
+<section id="welcome" class="welcome"><div class="orb" aria-hidden="true"></div><h2>Make room for your assistant.</h2>
+<p>A conversation, a browser, and a memory of its own.<br>Choose an assistant to begin.</p></section>
+<section id="workspace" hidden>
+<div class="toolbar"><button id="start">Start assistant</button><button id="stop" class="secondary">Stop</button>
+<button id="take-control" class="secondary">Take browser control</button><button id="release-control" class="secondary" hidden>Give back to assistant</button>
+<button id="memory-button" class="quiet">Memory</button><button id="credentials-button" class="quiet">Credentials</button><button id="console-button" class="quiet">Full OpenClaw interface ↗</button></div>
+<div class="workspace-grid">
+<section class="conversation" aria-label="Conversation"><div id="messages" aria-live="polite"></div>
+<form id="chat-form"><label class="sr-only" for="message">Message your assistant</label><textarea id="message" placeholder="What would you like to get done?" rows="3" maxlength="12000" required></textarea>
+<div class="composer-bottom"><span id="model">Luna · Guarded execution</span><button type="submit">Send ↗</button></div></form></section>
+<section class="browser-panel" aria-label="Assistant browser"><div class="browser-heading"><span>Live browser</span><span id="browser-mode">View only</span></div>
+<div class="browser-toolbar"><select id="tabs" aria-label="Browser tab"></select><form id="navigate-form"><input id="url" aria-label="Website address" placeholder="https://…" required><button type="submit" class="quiet">Go</button></form></div>
+<div class="browser-stage"><img id="browser-image" tabindex="0" alt="Live view of your assistant's browser" hidden><div id="browser-empty">Your browser will appear here.<br><small>Start the assistant to connect.</small></div></div>
+<p class="browser-help" id="browser-help">Take control to click, type, scroll, or complete a login.</p>
+<form id="type-form" hidden><input id="browser-text" aria-label="Text to type into the browser" placeholder="Type into the selected field"><button type="submit" class="quiet">Type</button></form>
+<div id="queue" class="queue"></div></section></div>
+</section>
+</main>
+<dialog id="create-dialog"><form id="create-form"><p class="eyebrow">A SPACE OF THEIR OWN</p><h2>Create an assistant</h2>
+<label>Name<input id="assistant-name" maxlength="80" required placeholder="My assistant"></label>
+<label>Owner<select id="assistant-owner" required></select></label>
+<p class="hint">Each assistant gets separate memory, credentials, and a browser profile.</p>
+<div class="dialog-actions"><button type="button" class="secondary" data-close>Cancel</button><button type="submit">Create assistant</button></div></form></dialog>
+<dialog id="memory-dialog"><h2>Memory</h2><pre id="memory-text"></pre><button data-close>Close</button></dialog>
+<dialog id="credentials-dialog"><h2>Credentials</h2><p class="hint">Encrypted on the server. Saved values are never returned to this page.</p>
+<form id="key-form"><label>OpenAI API key<input id="api-key" type="password" autocomplete="off" required></label><button type="submit">Save API key</button></form>
+<hr><form id="website-form"><h3>Save a website login</h3><label>Website hostname<input id="credential-host" placeholder="accounts.example.com" required></label>
+<label>Username<input id="credential-username" autocomplete="off" required></label><label>Password<input id="credential-password" type="password" autocomplete="new-password" required></label><button type="submit">Save login</button></form>
+<hr><form id="fill-form"><h3>Fill a saved login</h3><label>Saved website<select id="saved-host" required></select></label>
+<label>Username input selector<input id="username-selector" placeholder="input[name=email]" required></label>
+<label>Password input selector<input id="password-selector" placeholder="input[type=password]" required></label>
+<p class="hint">Requires browser control and the exact saved HTTPS hostname. Filling does not submit the form.</p>
+<button type="submit">Fill into browser</button></form><div class="dialog-actions"><button class="secondary" data-close>Close</button></div></dialog>
+<dialog id="login-dialog"><form id="login-form"><h2>Local development sign-in</h2><label>Development token<input id="local-token" type="password" required></label><button type="submit">Sign in</button></form></dialog>
+<script type="module" src="/app.js"></script>
+</body></html>

@@ -1,0 +1,20 @@
+# A namespace-capable container profile. Capabilities remain dropped by Docker.
+# Ubuntu 24.04+ user namespace mediation requires an explicit userns rule.
+# This profile is scoped to Tom guests; no global kernel restrictions are disabled.
+#include <tunables/global>
+profile tom-guest flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  network,
+  capability,
+  file,
+  umount,
+  signal,
+  ptrace,
+  userns,
+  # Only inner unprivileged namespaces can mount; the parent has no CAP_SYS_ADMIN.
+  mount,
+  deny /sys/** wklx,
+  deny /proc/sys/** wklx,
+  deny /proc/sysrq-trigger rwklx,
+  deny /proc/kcore rwklx,
+}

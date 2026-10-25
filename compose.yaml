@@ -1,0 +1,67 @@
+name: tom
+services:
+  app:
+    image: tom-app:0.1.0
+    build: .
+    container_name: tom-app
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,nosuid,size=64m,mode=1777
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      TOM_RUNTIME_DIR: /run/tom
+      TOM_APP_CONTAINER: tom-app
+      TOM_REQUIREMENTS_PATH: ${TOM_ROOT:-/opt/tom}/security/requirements.toml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${TOM_ROOT:-/opt/tom}/config.json:/opt/tom/config.json:ro
+      - ${TOM_ROOT:-/opt/tom}/data:${TOM_ROOT:-/opt/tom}/data
+      - ${TOM_ROOT:-/opt/tom}/secrets:/opt/tom/secrets:ro
+      - ${TOM_ROOT:-/opt/tom}/security:${TOM_ROOT:-/opt/tom}/security:ro
+      - /run/tom:/run/tom
+    networks: [management]
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07
+    container_name: tom-cloudflared
+    restart: unless-stopped
+    command: [tunnel, --no-autoupdate, run, --token-file, /run/secrets/tunnel-token]
+    user: "65532:65532"
+    mem_limit: 192m
+    cpus: 0.5
+    pids_limit: 64
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ${TOM_ROOT:-/opt/tom}/secrets/tunnel.token:/run/secrets/tunnel-token:ro
+    networks: [management]
+    depends_on:
+      app: {condition: service_healthy}
+    logging:
+      driver: local
+      options: {max-size: "5m", max-file: "2"}
+
+networks:
+  management:
+    name: tom-management
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${TOM_MANAGEMENT_SUBNET:-172.31.255.0/24}
