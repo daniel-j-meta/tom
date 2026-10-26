@@ -15,7 +15,9 @@ async def navigate(cdp, url):
         raise ValueError("Enter an HTTPS URL without credentials or a custom port")
     await resolve_public(parsed.hostname)
     # The mandatory CONNECT proxy independently checks every actual request and redirect.
-    await cdp.call("Page.navigate", {"url": url})
+    result = await cdp.call("Page.navigate", {"url": url})
+    if result.get("errorText"):
+        raise RuntimeError("Browser navigation failed: " + result["errorText"])
 
 
 async def input_action(cdp, action):

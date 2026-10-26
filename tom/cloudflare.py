@@ -131,5 +131,38 @@ class Cloudflare:
             state["dns_id"] = self.request("POST", records_path, record)["id"]
             save()
         state.update(status="configured", team=team, aud=app["aud"])
+        self.verify_resources(state, emails)
         save()
         return team, app["aud"], tunnel_token
+
+    def verify_resources(self, state, emails):
+        root = f"/accounts/{self.account}"
+        app = self.request("GET", root + "/access/apps/" + state["app_id"])
+        policies = self.request("GET", root + "/access/apps/" + state["app_id"] + "/policies")
+        policy = next((p for p in policies if p.get("id") == state["policy_id"]), None)
+        if app.get("domain") != state["hostname"] or app.get("aud") != state["aud"]:
+            raise RuntimeError("Cloudflare Access app readback did not match this installation")
+        if not policy or policy.get("decision") != "allow":
+            raise RuntimeError("Invited-user Access policy was not installed")
+        actual = sorted(
+            p.get("email", {}).get("email", "").lower() for p in policy.get("include", [])
+        )
+        if actual != sorted(emails) or any(p.get("decision") == "bypass" for p in policies):
+            raise RuntimeError(
+                "Access policy readback differs from the invited users or includes a bypass"
+            )
+        tunnel = self.request("GET", root + "/cfd_tunnel/" + state["tunnel_id"] + "/configurations")
+        routes = tunnel.get("config", {}).get("ingress", [])
+        if not any(
+            r.get("hostname") == state["hostname"] and r.get("service") == "http://tom-app:8080"
+            for r in routes
+        ):
+            raise RuntimeError("Cloudflare tunnel ingress did not match the Tom app")
+        dns = self.request("GET", f"/zones/{self.zone}/dns_records/" + state["dns_id"])
+        if (
+            dns.get("name") != state["hostname"]
+            or dns.get("type") != "CNAME"
+            or dns.get("content") != state["tunnel_id"] + ".cfargotunnel.com"
+            or not dns.get("proxied")
+        ):
+            raise RuntimeError("Cloudflare DNS readback did not point to this proxied tunnel")

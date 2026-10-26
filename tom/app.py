@@ -319,6 +319,23 @@ def create_app(config, store, runtime, auth=None):
         async with runtime.lock:
             return await browser_action_locked(request)
 
+    async def browser_status(request):
+        instance = selected(request)
+        if instance["state"] not in {"running", "human"}:
+            raise Busy("Start the assistant first")
+        cdp = await CDP.connect(browser_url(instance), request.query.get("target"))
+        try:
+            result = await cdp.call(
+                "Runtime.evaluate",
+                {
+                    "expression": "({readyState:document.readyState,url:location.href,text:(document.body?.innerText||'').slice(0,1024)})",
+                    "returnByValue": True,
+                },
+            )
+            return web.json_response(result.get("result", {}).get("value", {}))
+        finally:
+            await cdp.close()
+
     async def browser_stream(request):
         instance = selected(request)
         if instance["state"] not in {"running", "human"}:
@@ -506,6 +523,7 @@ def create_app(config, store, runtime, auth=None):
             web.post("/api/instances/{iid}/credentials", credentials),
             web.get("/api/instances/{iid}/tabs", tabs),
             web.post("/api/instances/{iid}/browser", browser_action),
+            web.get("/api/instances/{iid}/browser-status", browser_status),
             web.get("/api/instances/{iid}/stream", browser_stream),
             web.get("/api/instances/{iid}/approvals", approvals),
             web.post("/api/instances/{iid}/approvals", approvals),

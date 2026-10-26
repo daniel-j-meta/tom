@@ -6,12 +6,14 @@ tom_install_dir="${TOM_ROOT:-/opt/tom}"
 tom_reconfigure=()
 tom_restore=""
 tom_identity=""
+tom_skip_live=0
 while (( $# )); do
   case "$1" in
     --reconfigure) tom_reconfigure=(--reconfigure); shift ;;
     --restore) tom_restore="${2:?Archive path required}"; shift 2 ;;
     --identity) tom_identity="${2:?age identity file required}"; shift 2 ;;
-    --help) echo 'Usage: sudo ./setup.sh [--reconfigure] [--restore BACKUP.age --identity KEYFILE]'; exit 0 ;;
+    --skip-live-checks) tom_skip_live=1; shift ;;
+    --help) echo 'Usage: sudo ./setup.sh [--reconfigure] [--restore BACKUP.age --identity KEYFILE] [--skip-live-checks]'; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
@@ -130,5 +132,10 @@ systemctl daemon-reload
 systemctl enable tom-network-guard.service tom.service
 systemctl restart tom.service
 tom doctor
-echo 'Setup complete. Open your configured HTTPS hostname and sign in through Cloudflare Access.'
-echo 'Run: sudo tom doctor --live    to check your model account (uses a small amount of API credit).'
+if (( tom_skip_live )); then
+  echo 'Installed; live verification was explicitly skipped. Run sudo tom verify before using the server.'
+else
+  echo 'Running live deployment verification; the model check uses a small amount of API credit…'
+  tom verify
+  echo 'Setup and live checks complete. Open your configured HTTPS hostname and sign in through Cloudflare Access.'
+fi

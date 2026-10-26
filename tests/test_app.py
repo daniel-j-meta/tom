@@ -36,7 +36,7 @@ async def test_cross_user_cannot_list_read_control_or_change_instance(
         aiohttp_client, config, store, FixedAuth("other@example.com")
     )
     assert await (await client.get("/api/instances")).json() == []
-    for suffix in ["memory", "history", "jobs", "tabs"]:
+    for suffix in ["memory", "history", "jobs", "tabs", "browser-status"]:
         assert (await client.get(f"/api/instances/{instance['id']}/{suffix}")).status == 404
     for suffix in ["start", "stop", "take-control", "credentials", "browser"]:
         assert (

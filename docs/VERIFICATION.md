@@ -1,13 +1,15 @@
 # Verification
 
-Checked October 25, 2026. This is an initial setup package for invited users.
+Container/UI checks were run October 25, 2026; automated setup checks were updated October 26.
+This is an initial setup package for invited users.
 
 ## Passed
 
-- 36 automated tests: signed JWT validation, wrong issuer/audience/expiry, forged signatures,
+- 42 automated tests: signed JWT validation, wrong issuer/audience/expiry, forged signatures,
   invited-user checks, cross-user instance access, CSRF, encrypted secret storage and binding,
   private IPv4/IPv6 blocking, scoped DNS, duplicate submission handling, restart recovery,
-  memory symlink escape, Cloudflare setup ordering/idempotency, and staged restore.
+  memory symlink escape, Cloudflare setup ordering/idempotency/readback, staged restore,
+  live-check order, failed public/browser/model checks, cleanup, and preserving active user work.
 - Ruff, JavaScript syntax checks, ShellCheck, and Docker Compose validation.
 - Management and shared OpenClaw/browser Docker images built successfully.
 - Generated OpenClaw config validated by the pinned upstream image without warnings.
@@ -29,8 +31,9 @@ Checked October 25, 2026. This is an initial setup package for invited users.
   provider connectivity remain to be checked with normal public DNS on the Ubuntu server.
   The security policy was not loosened to make this test pass.
 - Docker integration uses fake API credentials. No authenticated inference, actual Luna
-  account access, model quality, or automatic-review decisions were evaluated. Run
-  `sudo tom doctor --live` after setup; it waits for a small real model request.
+  account access, model quality, or automatic-review decisions were evaluated here. Setup now
+  runs `tom verify` automatically on the target server and waits for a small real model reply.
+  The live checker is tested with fake endpoints; actual account checks require your credentials.
 - No Cloudflare credentials were provided here. Live creation of Access policies, DNS, and
   a tunnel was not performed. Those requests are tested with a fake API and executed by
   the target server's wizard with your scoped token.

@@ -24,6 +24,12 @@ The interactive setup asks for your app hostname, your email, invited emails, Cl
 account/zone IDs, a Cloudflare API token, and an OpenAI API key. Secret inputs are hidden.
 It installs Docker, builds images, configures Cloudflare Access and Tunnel, publishes DNS,
 creates an assistant for each invited user, and installs systemd startup services.
+It then verifies the installed Cloudflare resources, public HTTPS/Access login challenge,
+the real browser's internet access and control handoff, and one small live model reply.
+The model check uses API credits. Setup reports success only after these checks pass.
+On failure, fix the reported issue and rerun `sudo tom verify`; installation remains available.
+For an intentional installation without live checks, use `--skip-live-checks`; setup clearly
+reports that verification was skipped.
 
 ### Cloudflare prerequisites
 
@@ -81,7 +87,8 @@ sudo tom stop INSTANCE_ID
 sudo tom logs                       # Management and tunnel logs
 sudo tom logs INSTANCE_ID           # Gateway logs
 sudo tom doctor                     # Authenticated local health checks
-sudo tom doctor --live              # Queue a small real model check; uses API credits
+sudo tom doctor --live              # Wait for a small real model check; uses API credits
+sudo tom verify                     # Repeat public Access, browser, handoff, and live model checks
 sudo tom down                       # Stop instances and services
 sudo tom up
 ```

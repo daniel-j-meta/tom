@@ -19,6 +19,7 @@ import aiohttp
 from .cloudflare import Cloudflare
 from .config import Config
 from .store import Store
+from .verify import verify_deployment
 
 
 def prompt(label, default="", hidden=False):
@@ -99,7 +100,7 @@ def bootstrap(root, reconfigure=False):
     print("Configured", raw["public_origin"], "for", len(emails), "invited users.")
 
 
-async def admin_api(root, path, body=None):
+async def admin_api(root, path, body=None, headers=None):
     token = (root / "secrets/admin.token").read_text().strip()
     async with aiohttp.ClientSession(
         connector=aiohttp.UnixConnector(path="/run/tom/admin.sock")
@@ -108,7 +109,7 @@ async def admin_api(root, path, body=None):
             "GET" if body is None else "POST",
             "http://tom" + path,
             json=body,
-            headers={"Authorization": "Bearer " + token},
+            headers={"Authorization": "Bearer " + token, **(headers or {})},
         ) as response:
             data = await response.json()
             if response.status >= 400:
@@ -222,6 +223,9 @@ def main():
         "--live", action="store_true", help="Send a tiny model request; uses API credits"
     )
     sub.add_parser("up")
+    sub.add_parser(
+        "verify", help="Verify public Access, browser internet, handoff, and live model access"
+    )
     sub.add_parser("down")
     backup = sub.add_parser("backup")
     backup.add_argument(
@@ -236,6 +240,10 @@ def main():
     try:
         if args.command == "configure":
             bootstrap(root, args.reconfigure)
+        elif args.command == "verify":
+            asyncio.run(
+                verify_deployment(root, Config.load(root / "config.json"), admin_api, wait_job)
+            )
         elif args.command == "status":
             for i in asyncio.run(admin_api(root, "/api/instances")):
                 print(i["id"], i["state"].ljust(9), i["owner"], i["name"])

@@ -8,6 +8,8 @@ class FakeCloudflare(Cloudflare):
         super().__init__("not-a-real-token", "account", "zone")
         self.calls = []
         self.records = []
+        self.policy = None
+        self.tunnel_config = {}
 
     def request(self, method, path, data=None):
         self.calls.append((method, path, data))
@@ -27,7 +29,17 @@ class FakeCloudflare(Cloudflare):
                 "domain": "tom.example.com",
             }
         if path.endswith("/policies"):
-            return {"id": "policy"}
+            if method == "GET":
+                return [self.policy]
+            self.policy = {**data, "id": "policy"}
+            return self.policy
+        if path.endswith("/policies/policy") and method == "PUT":
+            self.policy = {**data, "id": "policy"}
+            return self.policy
+        if path.endswith("/configurations"):
+            if method == "PUT":
+                self.tunnel_config = data
+            return self.tunnel_config
         if path.endswith("/cfd_tunnel"):
             return {"id": "tunnel"}
         if path.endswith("/token"):
